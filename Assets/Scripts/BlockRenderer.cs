@@ -17,11 +17,14 @@ public class BlockRenderer : MonoBehaviour {
 	private int minInit;
 	private int maxInit;
 	
+	private int quizBlockRange = 1;
+	
 	private int[,] map2D = new int[mapSize,mapSize];
 	public GameObject nullBlock;
 	public Sprite nullBlockSprite;
 	public Sprite[] BlockSprites = new Sprite[6];
 	private GameObject[,] map2dRendered = new GameObject[mapSize,mapSize];
+	private int[,] problemSets = new int[4, 3];
 
 
 	// Use this for initialization
@@ -31,6 +34,7 @@ public class BlockRenderer : MonoBehaviour {
 		minInit = centerPos - initBlockRange;
 		maxInit = centerPos + initBlockRange;
 		ArrayInitializer();
+		ProblemMaker();
 		MapRenderer();
 
 	}
@@ -42,22 +46,28 @@ public class BlockRenderer : MonoBehaviour {
 			MatrixRoataion();
 			MapRenderer();
 		}
+
+		if (Input.GetKeyDown(KeyCode.A))
+		{
+			ProblemMaker();
+			MapRenderer();
+		}
 	}
 
 //If I seperate the quadrant ==> it might be east to render the blocks...
 	void MatrixRoataion()
 	{
 		int[,] dummyMap2D = new int[mapSize,mapSize];
-		for (int i = 0; i < 11; i++)
+		for (int i = 1; i < 10; i++)
 		{
-			for (int j = 0; j < 11; j++)
+			for (int j = 1; j < 10; j++)
 			{
 				dummyMap2D[mapSize-j-1, i] = map2D[i, j];
 			}
 		}
-		for (int i = 0; i < 11; i++)
+		for (int i = 1; i < 10; i++)
 		{
-			for (int j = 0; j < 11; j++)
+			for (int j = 1; j < 10; j++)
 			{
 				map2D[i, j] = dummyMap2D[i, j];
 			}
@@ -65,6 +75,34 @@ public class BlockRenderer : MonoBehaviour {
 		
 	}
 
+	void ProblemMaker()
+	{
+		for(int i = minInit; i<=maxInit;i++)
+		{
+			int num = RandomBlockNumber();
+			map2D[0, i] = num;
+			problemSets[0, i - minInit] = num;
+
+			num = RandomBlockNumber();
+			map2D[i, mapSize - 1] = num;
+			problemSets[1, i - minInit] = num;
+
+			num = RandomBlockNumber();
+			map2D[i, 0] = num;
+			problemSets[2, i - minInit] = num;
+
+			num = RandomBlockNumber();
+			map2D[mapSize - 1, i] = num;
+			problemSets[3, i - minInit] = num;
+
+		}
+		
+	}
+
+	int RandomBlockNumber()
+	{
+		return ((Random.Range(0f, 1f) > 0.1) ? (int) Random.Range(1.0f, 6.0f) : -1);
+	}
 	void MapRenderer()
 	{
 		for (int i = 0; i < mapSize; i++)
@@ -91,7 +129,6 @@ public class BlockRenderer : MonoBehaviour {
 				map2dRendered[i,j] = Instantiate(nullBlock, pos, Quaternion.identity);
 			}
 		}
-
 		//Map initializer
 		//Random으로 방향성마다 더 확장할지 않할지를 해주는 함수가 있으면 좋을듯 ==> 정사각형 말고 다른 모양 시작함수
 		for (int i = minInit; i <= maxInit; i++)
@@ -105,7 +142,6 @@ public class BlockRenderer : MonoBehaviour {
 				
 				if ((i == minInit || j == minInit || i == maxInit || j == maxInit) && Random.Range(0f, 1f) > 0.9)
 					map2D[i, j] = -1;
-
 			}
 		}
 		
