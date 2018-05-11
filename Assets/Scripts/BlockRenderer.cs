@@ -27,6 +27,8 @@ public class BlockRenderer : MonoBehaviour {
 	private int[,] problemSets = new int[4, 3];
 
 
+	private int[,] stackDir = new int[4,2] {{-1,0},{0,-1},{1,0},{0,1}}; 
+	
 	// Use this for initialization
 	void Start ()
 	{
@@ -46,35 +48,137 @@ public class BlockRenderer : MonoBehaviour {
 			MatrixRoataion();
 			MapRenderer();
 		}
+		
+		// #TODO Blocks should be gathered to the center
 
-		if (Input.GetKeyDown(KeyCode.A))
+		if (Input.GetKeyDown(KeyCode.LeftArrow))
 		{
+			StackProblem(0);
+			ProblemMaker();
+			MapRenderer();
+			
+		}
+		if (Input.GetKeyDown(KeyCode.DownArrow))
+		{
+			StackProblem(1);
+			ProblemMaker();
+			MapRenderer();
+		}
+		if (Input.GetKeyDown(KeyCode.RightArrow))
+		{
+			StackProblem(2);
+			ProblemMaker();
+			MapRenderer();
+		}
+		if (Input.GetKeyDown(KeyCode.UpArrow))
+		{
+			StackProblem(3);
 			ProblemMaker();
 			MapRenderer();
 		}
 	}
 
-//If I seperate the quadrant ==> it might be east to render the blocks...
-	void MatrixRoataion()
+	void StackProblem(int dir)
 	{
-		int[,] dummyMap2D = new int[mapSize,mapSize];
-		for (int i = 1; i < 10; i++)
-		{
-			for (int j = 1; j < 10; j++)
-			{
-				dummyMap2D[mapSize-j-1, i] = map2D[i, j];
-			}
-		}
-		for (int i = 1; i < 10; i++)
-		{
-			for (int j = 1; j < 10; j++)
-			{
-				map2D[i, j] = dummyMap2D[i, j];
-			}
-		}
 		
+		//Problem Axis
+		int pAxis = 0;
+		//Problem orthnogonal Axis
+		int poAxis = 0;
+
+		// i : problem colum j  : other
+		switch (dir)
+		{
+			case 0: 	
+				for (int i = minInit; i <=maxInit; i++)
+				{
+					if (problemSets[dir, i-minInit] != -1)
+					{
+						for (int j = 1; j < mapSize - 1; j++)
+						{
+							if (map2D[j,i] != -1)
+							{
+								pAxis = i;
+								poAxis = j;
+								break;
+							}
+						}
+						poAxis = poAxis + stackDir[dir, 0];
+						pAxis = pAxis + stackDir[dir, 1];
+						map2D[poAxis, pAxis] = problemSets[dir, i-minInit];
+					}
+					
+				}
+				break;
+			case 1:
+				for (int i = minInit; i <=maxInit; i++)
+				{
+					if (problemSets[dir, i-minInit] != -1)
+					{
+						for (int j = 1; j < mapSize - 1; j++)
+						{
+							if (map2D[i,j] != -1)
+							{
+								pAxis = i;
+								poAxis = j;
+								break;
+							}
+						}
+						pAxis = pAxis + stackDir[dir, 0];
+						poAxis = poAxis + stackDir[dir, 1];
+						map2D[pAxis, poAxis] = problemSets[dir, i-minInit];
+					}
+					
+				}
+				break;
+			case 2:
+				for (int i = minInit; i <=maxInit; i++)
+				{
+					if (problemSets[dir, i-minInit] != -1)
+					{
+						for (int j = mapSize-2; j >=1; j--)
+						{
+							if (map2D[j,i] != -1)
+							{
+								pAxis = i;
+								poAxis = j;
+								break;
+							}
+						}
+						poAxis = poAxis + stackDir[dir, 0];
+						pAxis = pAxis + stackDir[dir, 1];
+						map2D[poAxis, pAxis] = problemSets[dir, i-minInit];
+					}
+					
+				}
+
+				break;
+			case 3:
+				for (int i = minInit; i <=maxInit; i++)
+				{
+					if (problemSets[dir, i-minInit] != -1)
+					{
+						for (int j = mapSize-2; j >=1; j--)
+						{
+							if (map2D[i,j] != -1)
+							{
+								pAxis = i;
+								poAxis = j;
+								break;
+							}
+						}
+						pAxis = pAxis + stackDir[dir, 0];
+						poAxis = poAxis + stackDir[dir, 1];
+						map2D[pAxis, poAxis] = problemSets[dir, i-minInit];
+					}
+					
+				}
+				break;
+		}
+			
 	}
 
+	// problem set : min Init to max init ==> It can be changed
 	void ProblemMaker()
 	{
 		for(int i = minInit; i<=maxInit;i++)
@@ -84,25 +188,47 @@ public class BlockRenderer : MonoBehaviour {
 			problemSets[0, i - minInit] = num;
 
 			num = RandomBlockNumber();
-			map2D[i, mapSize - 1] = num;
-			problemSets[1, i - minInit] = num;
-
-			num = RandomBlockNumber();
 			map2D[i, 0] = num;
-			problemSets[2, i - minInit] = num;
-
+			problemSets[1, i - minInit] = num;
+			
 			num = RandomBlockNumber();
 			map2D[mapSize - 1, i] = num;
+			problemSets[2, i - minInit] = num;
+			
+			num = RandomBlockNumber();
+			map2D[i, mapSize - 1] = num;
 			problemSets[3, i - minInit] = num;
 
 		}
 		
 	}
 
+//If I seperate the quadrant ==> it might be east to render the blocks...
+	void MatrixRoataion()
+	{
+		int[,] dummyMap2D = new int[mapSize,mapSize];
+		for (int i = 1; i < mapSize-1; i++)
+		{
+			for (int j = 1; j < mapSize-1; j++)
+			{
+				dummyMap2D[mapSize-j-1, i] = map2D[i, j];
+			}
+		}
+		for (int i = 1; i < mapSize-1; i++)
+		{
+			for (int j = 1; j < mapSize-1; j++)
+			{
+				map2D[i, j] = dummyMap2D[i, j];
+			}
+		}
+		
+	}
+	
 	int RandomBlockNumber()
 	{
 		return ((Random.Range(0f, 1f) > 0.1) ? (int) Random.Range(1.0f, 6.0f) : -1);
 	}
+	
 	void MapRenderer()
 	{
 		for (int i = 0; i < mapSize; i++)
@@ -116,7 +242,10 @@ public class BlockRenderer : MonoBehaviour {
 			}
 		}
 	}
+
 	
+	
+	//Nothing : -1 else : Color(1 to 5)
 	void ArrayInitializer()
 	{
 		//prefab Initializer
