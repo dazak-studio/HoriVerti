@@ -27,7 +27,10 @@ public class BlockRenderer : MonoBehaviour {
 	private int[,] problemSets = new int[4, 3];
 
 
-	private int[,] stackDir = new int[4,2] {{-1,0},{0,-1},{1,0},{0,1}}; 
+	private int[,] stackDir = new int[4,2] {{-1,0},{0,-1},{1,0},{0,1}};
+
+	private int[,] checkerDir = new int[4, 2] {{-1, 0}, {0, -1}, {1, 0}, {0, 1}};
+	private float blockNumber = 4;
 	
 	// Use this for initialization
 	void Start ()
@@ -36,7 +39,10 @@ public class BlockRenderer : MonoBehaviour {
 		minInit = centerPos - initBlockRange;
 		maxInit = centerPos + initBlockRange;
 		ArrayInitializer();
-		ProblemMaker();
+		ProblemMaker(0);
+		ProblemMaker(1);
+		ProblemMaker(2);
+		ProblemMaker(3);
 		MapRenderer();
 
 	}
@@ -54,30 +60,38 @@ public class BlockRenderer : MonoBehaviour {
 		if (Input.GetKeyDown(KeyCode.LeftArrow))
 		{
 			StackProblem(0);
-			ProblemMaker();
-			MapRenderer();
+			GroupInputFeedback(0);
 			
 		}
 		if (Input.GetKeyDown(KeyCode.DownArrow))
 		{
 			StackProblem(1);
-			ProblemMaker();
-			MapRenderer();
+			GroupInputFeedback(1);
 		}
 		if (Input.GetKeyDown(KeyCode.RightArrow))
 		{
 			StackProblem(2);
-			ProblemMaker();
-			MapRenderer();
+			GroupInputFeedback(2);
 		}
 		if (Input.GetKeyDown(KeyCode.UpArrow))
 		{
 			StackProblem(3);
-			ProblemMaker();
-			MapRenderer();
+			GroupInputFeedback(3);
 		}
 	}
 
+	void GroupInputFeedback(int index)
+	{
+		Checker();
+		MapRenderer();
+		ProblemMaker(index);
+		MapRenderer();
+	}
+
+	//Making Vector
+	
+	//DFS for each vector
+	
 	void StackProblem(int dir)
 	{
 		
@@ -179,26 +193,33 @@ public class BlockRenderer : MonoBehaviour {
 	}
 
 	// problem set : min Init to max init ==> It can be changed
-	void ProblemMaker()
+	void ProblemMaker(int index)
 	{
 		for(int i = minInit; i<=maxInit;i++)
 		{
-			int num = RandomBlockNumber();
-			map2D[0, i] = num;
-			problemSets[0, i - minInit] = num;
-
-			num = RandomBlockNumber();
-			map2D[i, 0] = num;
-			problemSets[1, i - minInit] = num;
-			
-			num = RandomBlockNumber();
-			map2D[mapSize - 1, i] = num;
-			problemSets[2, i - minInit] = num;
-			
-			num = RandomBlockNumber();
-			map2D[i, mapSize - 1] = num;
-			problemSets[3, i - minInit] = num;
-
+			switch (index)
+			{
+				case 0:
+					int num = RandomBlockNumber();
+					map2D[0, i] = num;
+					problemSets[0, i - minInit] = num;
+					break;
+				case 1:
+					num = RandomBlockNumber();
+					map2D[i, 0] = num;
+					problemSets[1, i - minInit] = num;
+					break;
+				case 2:
+					num = RandomBlockNumber();
+					map2D[mapSize - 1, i] = num;
+					problemSets[2, i - minInit] = num;
+					break;
+				case 3:
+					num = RandomBlockNumber();
+					map2D[i, mapSize - 1] = num;
+					problemSets[3, i - minInit] = num;
+					break;
+			}
 		}
 		
 	}
@@ -226,7 +247,7 @@ public class BlockRenderer : MonoBehaviour {
 	
 	int RandomBlockNumber()
 	{
-		return ((Random.Range(0f, 1f) > 0.1) ? (int) Random.Range(1.0f, 6.0f) : -1);
+		return ((Random.Range(0f, 1f) > 0.1) ? (int) Random.Range(1.0f, blockNumber) : -1);
 	}
 	
 	void MapRenderer()
@@ -243,7 +264,184 @@ public class BlockRenderer : MonoBehaviour {
 		}
 	}
 
+	private List<int[]> sameblockList = new List<int[]>();
+	private List<int[]> checkerList = new List<int[]>();
 	
+
+
+	private int[,] checkDummyArray = new int[mapSize,mapSize];
+
+	void Checker()
+	{
+		sameblockList.Clear();
+
+		//Dummy Array Initializer
+		for (int i = 1; i < mapSize - 1; i++)
+		{
+			for (int j = 1; j < mapSize - 1; j++)
+			{
+				checkDummyArray[i, j] = map2D[i, j];
+			}
+		}
+
+		for (int i = 0; i < mapSize; i++)
+		{
+			checkDummyArray[0, i] = -1;
+			checkDummyArray[i, 0] = -1;
+			checkDummyArray[mapSize - 1, i] = -1;
+			checkDummyArray[i, mapSize - 1] = -1;
+		}
+
+		//Check one block by one block
+		for (int i = 1; i < mapSize - 1; i++)
+		{
+			for (int j = 1; j < mapSize - 1; j++)
+			{
+				int color = checkDummyArray[i, j];
+				if (color >= 1)
+				{
+					Debug.Log("=============start=============="+" (" + i + ","+ j+")");
+					checkerList.Add(new int[] {i, j});
+					sameblockList.Add(new int[] {i, j});
+					checkDummyArray[i, j] = -1;
+					stackChecker(color);
+
+
+					for (int k = 0; k < sameblockList.Count; k++)
+					{
+						Debug.Log("[Total List] :" + sameblockList.Count + "= " + "(" + sameblockList[k][0] + "," +
+						          sameblockList[k][1] + ")" + color);
+					}
+
+					if (sameblockList.Count >= 3)
+					{
+						Debug.Log("Delete");
+						for (int k = 0; k < sameblockList.Count; k++)
+						{
+							map2D[sameblockList[k][0], sameblockList[k][1]] = -1;
+						}
+					}
+
+					sameblockList.Clear();
+
+				}
+
+			}
+		}
+
+	}
+
+
+
+	void stackChecker(int color)
+	{
+		do
+		{
+			Debug.Log("Start sameblock count " + sameblockList.Count);
+			int i = checkerList[0][0];
+			int j = checkerList[0][1];
+			checkerList.RemoveAt(0);
+
+			
+			Debug.Log("[Funtion Start]color : "+ color + " (" + i + ","+ j+")");
+			for (int k = 0; k < 4; k++)
+			{
+				if (checkDummyArray[i + checkerDir[k, 0], j + checkerDir[k, 1]]==color)
+				{
+					checkDummyArray[i, j] = -1;
+					checkerList.Add(new int[]{i + checkerDir[k, 0], j + checkerDir[k, 1]});
+					sameblockList.Add(new int[]{i + checkerDir[k, 0], j + checkerDir[k, 1]});
+				}
+			}
+
+			for (int k = 0; k < checkerList.Count; k++)
+			{
+				Debug.Log("==> :" + checkerList.Count + "= " + "(" + checkerList[k][0] + "," +
+				          checkerList[k][1] + ")" + color);
+			}
+		} while (checkerList.Count != 0);
+
+		Debug.Log("Done==============" + color );
+
+	}
+	/*
+	void Checker()
+	{
+		sameblockList.Clear();
+		
+		//Dummy Array Initializer
+		for (int i = 1; i < mapSize-1; i++)
+		{
+			for (int j = 1; j < mapSize-1; j++)
+			{
+				checkDummyArray[i, j] = map2D[i, j];
+			}
+		}
+		for (int i = 0; i < mapSize; i++)
+		{
+			checkDummyArray[0, i] = -1;
+			checkDummyArray[i, 0] = -1;
+			checkDummyArray[mapSize - 1, i] = -1;
+			checkDummyArray[i, mapSize - 1] = -1;
+		}
+
+		//Check one block by one block
+		for (int i = 1; i < mapSize - 1; i++)
+		{
+			for (int j = 1; j < mapSize - 1; j++)
+			{
+				int color = checkDummyArray[i, j];
+				if (color >= 1)
+				{
+					Debug.Log("=================start==============");
+					recurChecker(i, j, color);
+					
+					
+					for (int k = 0; k < sameblockList.Count; k++)
+					{
+						Debug.Log("Count :" + (sameblockList.Count) + "= " + "("+sameblockList[k][0] + "," +sameblockList[k][1] + ")" +color);
+					}
+					
+					if (sameblockList.Count >= 3)
+					{
+						Debug.Log("Delete");
+						for (int k = 0; k < sameblockList.Count; k++)
+						{
+							map2D[sameblockList[k][0], sameblockList[k][1]] = -1;
+						}
+					}
+					sameblockList.Clear();
+				}
+
+			}
+		}
+
+		if (sameblockList.Count >= 3)
+		{
+			foreach (var test in sameblockList)
+			{
+				//Debug.Log("_" + test[0]+"_"+test[1]);
+			}
+		}
+	}
+
+
+
+	void recurChecker(int i, int j,int color)
+	{
+			Debug.Log("[Funtion Start]color : "+ color + " (" + i + ","+ j+")");
+		
+			sameblockList.Add(new int[] {i,j});
+			checkDummyArray[i, j] = -1; 
+			for (int k = 0; k < 4; k++)
+			{
+				if (checkDummyArray[i + checkerDir[k, 0], j + checkerDir[k, 1]]==color)
+				{
+					recurChecker(i + checkerDir[k, 0],j + checkerDir[k, 1],color);
+				}
+			}						
+	}
+	*/
 	
 	//Nothing : -1 else : Color(1 to 5)
 	void ArrayInitializer()
@@ -267,7 +465,7 @@ public class BlockRenderer : MonoBehaviour {
 				if (i == centerPos && j == centerPos)
 					map2D[i, j] = 0;
 				else
-					map2D[i, j] = (int) Random.Range(1.0f, 6.0f);
+					map2D[i, j] = (int) Random.Range(1.0f, blockNumber);
 				
 				if ((i == minInit || j == minInit || i == maxInit || j == maxInit) && Random.Range(0f, 1f) > 0.9)
 					map2D[i, j] = -1;

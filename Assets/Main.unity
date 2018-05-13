@@ -225,7 +225,7 @@ MonoBehaviour:
   nullBlockSprite: {fileID: 0}
   BlockSprites:
   - {fileID: 21300000, guid: 6025474fb557f4ffb88e57d0d8f0d29b, type: 3}
-  - {fileID: 21300002, guid: 19eb642d2f3054c35b9180af79f813c0, type: 3}
+  - {fileID: 21300000, guid: 19eb642d2f3054c35b9180af79f813c0, type: 3}
   - {fileID: 21300002, guid: 19eb642d2f3054c35b9180af79f813c0, type: 3}
   - {fileID: 21300004, guid: 19eb642d2f3054c35b9180af79f813c0, type: 3}
   - {fileID: 21300006, guid: 19eb642d2f3054c35b9180af79f813c0, type: 3}
